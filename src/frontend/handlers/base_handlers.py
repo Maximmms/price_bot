@@ -41,3 +41,15 @@ async def ask_for_article(bot: AsyncTeleBot, message):
         "Введите артикул для поиска:",
         reply_markup=get_main_keyboard()  # Сохраняем кнопку
     )
+
+async def handle_web_app_data(message, bot: AsyncTeleBot):
+    """
+    Обрабатывает данные, отправленные из Web App.
+    """
+    article = message.web_app_data.data
+    await bot.send_message(
+        message.chat.id,
+        f"Вы ввели артикул: <b>{article}</b>\n🔍 Ищем товар...",
+        parse_mode="HTML",
+        reply_markup=get_main_keyboard()
+    )

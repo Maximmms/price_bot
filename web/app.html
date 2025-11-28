@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Поиск по артикулу</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 24px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transform: translateY(0);
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #ffffff;
+    }
+    p {
+      font-size: 15px;
+      opacity: 0.9;
+      margin-bottom: 28px;
+    }
+    .input-group {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    input {
+      width: 100%;
+      padding: 16px 20px;
+      padding-left: 52px;
+      font-size: 16px;
+      border: none;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      outline: none;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    input:focus {
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+    }
+    .icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    button {
+      background: #ffffff;
+      color: #2575fc;
+      border: none;
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+    button:hover {
+      background: #f0f0f0;
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    .round-button {
+      position: fixed;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #2575fc;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      bottom: 30px;
+      right: 20px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      cursor: pointer;
+      z-index: 100;
+      transition: transform 0.2s;
+    }
+    .round-button:active {
+      transform: scale(0.95);
+    }
+    @media (max-width: 480px) {
+      .round-button {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        bottom: 16px;
+        right: 16px;
+      }
+      .container {
+        padding: 28px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Поиск товара</h1>
+    <p>Введите артикул, чтобы найти нужный товар</p>
+    <div class="input-group">
+      <span class="icon">📦</span>
+      <input type="text" id="article" placeholder="Введите артикул, например: XT902" autofocus />
+    </div>
+    <button id="send">Найти товар</button>
+  </div>
+
+  <!-- Круглая плавающая кнопка отправки -->
+  <button class="round-button" id="round-send">🔎</button>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    tg.ready();
+
+    const input = document.getElementById("article");
+    const sendBtn = document.getElementById("send");
+    const roundBtn = document.getElementById("round-send");
+
+    function sendData() {
+      const value = input.value.trim();
+      if (!value) {
+        tg.showAlert("Пожалуйста, введите артикул!");
+        return;
+      }
+      // Отправляем данные в бота
+      tg.sendData(value);
+      tg.close();  // Закрываем Web App после отправки
+    }
+
+    sendBtn.addEventListener("click", sendData);
+    roundBtn.addEventListener("click", sendData);
+
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendData();
+    });
+
+    // Автофокус при открытии
+    input.focus();
+  </script>
+</body>
+</html>

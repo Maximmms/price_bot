@@ -1,5 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
-from src.frontend.handlers.base_handlers import ask_for_article, send_welcome, about_user
+from src.frontend.handlers.base_handlers import ask_for_article, handle_web_app_data, send_welcome, about_user
 
 
 def register_handlers(bot: AsyncTeleBot):
@@ -14,3 +14,5 @@ def register_handlers(bot: AsyncTeleBot):
     @bot.message_handler(func=lambda message: message.text == "🔍 Поиск")
     async def search_handler(message):
         await ask_for_article(bot, message)
+
+    bot.register_message_handler(handle_web_app_data, content_types=["web_app_data"], pass_bot=True)
