@@ -1,9 +1,9 @@
-name: Deploy Web App to GitHub Pages
+ame: Deploy Web App to GitHub Pages
 
 on:
   push:
     branches:
-      - main  # или master, в зависимости от основной ветки
+      - main
 
 permissions:
   contents: read
@@ -18,6 +18,9 @@ jobs:
   deploy:
     name: Deploy Web App
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout code
@@ -29,7 +32,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web  # папка, которую публикуем
+          path: web
 
       - name: Deploy to GitHub Pages
         id: deployment
