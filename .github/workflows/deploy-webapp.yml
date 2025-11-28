@@ -1,4 +1,4 @@
-ame: Deploy Web App to GitHub Pages
+Name: Deploy Web App to GitHub Pages
 
 on:
   push:
