@@ -84,6 +84,62 @@
       font-size: 18px;
       color: rgba(255, 255, 255, 0.8);
     }
+    .partners-section {
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .partners-header {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: #ffffff;
+    }
+    .partner-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+    .partner-item {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      color: #fff;
+    }
+  .partner-item input[type="checkbox"] {
+    margin-right: 12px;
+    flex-shrink: 0;
+    accent-color: #ffffff;
+    width: 18px;
+    height: 18px;
+    margin-top: 0;
+    vertical-align: middle;
+  }
+    .partner-item label {
+      display: inline-block;
+      vertical-align: middle;
+      font-size: 14px;
+      color: #ffffff;
+      cursor: pointer;
+      user-select: none;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0;
+      padding: 0;
+      line-height: 1.4;
+      min-height: 20px;
+    }
+    .select-all {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
     button {
       background: #ffffff;
       color: #2575fc;
@@ -147,6 +203,16 @@
       <span class="icon">📦</span>
       <input type="text" id="article" placeholder="Введите артикул, например: XT902" autofocus />
     </div>
+
+    <!-- Секция выбора партнёров -->
+    <div class="partners-section">
+      <div class="partners-header">Выберите магазины для поиска:</div>
+      <div class="partner-list" id="partner-list">
+        <!-- Партнёры будут добавлены через JS -->
+      </div>
+      <div class="select-all" id="select-all">Выбрать всех</div>
+    </div>
+
     <button id="send">Найти товар</button>
   </div>
 
@@ -160,6 +226,50 @@
     const input = document.getElementById("article");
     const sendBtn = document.getElementById("send");
     const roundBtn = document.getElementById("round-send");
+    const partnerList = document.getElementById("partner-list");
+    const selectAllBtn = document.getElementById("select-all");
+
+    // Список партнёров
+    const partners = [
+      "Merlion",
+      "Netlab",
+      "OCS",
+      "3Logic",
+      "Treolan"
+    ];
+
+    // Создаём чекбоксы для всех партнёров
+    const checkboxes = {};
+    partners.forEach(partner => {
+      const div = document.createElement("div");
+      div.className = "partner-item";
+
+      const id = `partner-${partner}`;
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.id = id;
+      checkbox.checked = true;
+      checkboxes[partner] = checkbox;
+
+      const label = document.createElement("label");
+      label.setAttribute("for", id); // Критически важно для работы
+      label.textContent = partner;
+
+      // Добавляем элементы в контейнер
+      div.appendChild(checkbox);
+      div.appendChild(label);         // <-- Этот вызов мог быть затёрт
+      partnerList.appendChild(div);
+    });
+
+    // Логика "Выбрать всех"
+    let isAllSelected = true;
+    selectAllBtn.addEventListener("click", () => {
+      isAllSelected = !isAllSelected;
+      selectAllBtn.textContent = isAllSelected ? "Выбрать всех" : "Снять все";
+      partners.forEach(p => {
+        checkboxes[p].checked = isAllSelected;
+      });
+    });
 
     function sendData() {
       const value = input.value.trim();
@@ -167,9 +277,20 @@
         tg.showAlert("Пожалуйста, введите артикул!");
         return;
       }
-      // Отправляем данные в бота
-      tg.sendData(value);
-      tg.close();  // Закрываем Web App после отправки
+
+      const selectedPartners = partners.filter(p => checkboxes[p].checked);
+      if (selectedPartners.length === 0) {
+        tg.showAlert("Выберите хотя бы одного партнёра для поиска!");
+        return;
+      }
+
+      const data = {
+        article: value,
+        partners: selectedPartners
+      };
+
+      tg.sendData(JSON.stringify(data));
+      tg.close();
     }
 
     sendBtn.addEventListener("click", sendData);
@@ -179,7 +300,6 @@
       if (e.key === "Enter") sendData();
     });
 
-    // Автофокус при открытии
     input.focus();
   </script>
 </body>
