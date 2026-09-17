@@ -1,5 +1,5 @@
 from telebot.async_telebot import AsyncTeleBot
-from src.frontend.handlers.base_handlers import (
+from frontend.tgbot.handlers.base_handlers import (
     send_welcome,
     about_user,
     ask_for_article,

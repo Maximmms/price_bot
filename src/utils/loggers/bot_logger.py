@@ -2,7 +2,6 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from logging.handlers import RotatingFileHandler
 import os
-from datetime import datetime
 
 class AsyncFileHandler(RotatingFileHandler):
     """

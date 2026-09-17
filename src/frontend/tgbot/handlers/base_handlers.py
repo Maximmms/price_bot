@@ -1,15 +1,14 @@
-from typing import Any
 import requests
 import json
 from telebot.async_telebot import AsyncTeleBot
 from telebot.types import Message
-from src.frontend.keyboards.base_keyboard import get_main_keyboard
+from frontend.tgbot.keyboards.base_keyboard import get_main_keyboard
 from src.utils import bot_logger as logger
 import os
 
 
 # Загрузка URL бэкенда из переменных окружения
-BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+BACKEND_URL = os.getenv("BACKEND_URL")
 WEB_APP_DATA_TIMEOUT = 10  # Таймаут для запросов к бэкенду
 
 
@@ -149,20 +148,106 @@ async def handle_web_app_data(message: Message, bot: AsyncTeleBot) -> None:
         if len(partners) > 3:
             partners_list = f"{partners[0]}, {partners[1]} и {len(partners) - 2} других"
 
-        # Отправляем заглушку с информацией
+        if len(partners) == 1:
+            store_text = "Магазин"
+        else:
+            store_text = "Магазины"
+
+        # Отправляем статус поиска
         await bot.send_message(
             chat_id=message.chat.id,
             text=(
                 f"🔍 Артикул: <b>{article}</b> — получен.\n"
-                f"🏪 Магазины: {partners_list}\n"
+                f"🏪 {store_text}: {partners_list}\n"
                 f"⏳ Ведётся поиск..."
             ),
             parse_mode="HTML",
             reply_markup=get_main_keyboard()
         )
 
-        # Здесь в будущем будет запрос к бэкенду с фильтрацией по партнёрам
-        # Например: requests.post(f"{BACKEND_URL}/search", json={"article": article, "partners": partners})
+        # Запрос к каждому поставщику
+        for partner in partners:
+            partner_key = partner.lower()
+            logger.info(f"Отправлен запрос к бэкенду для партнёра {partner_key}, артикул {article}")
+
+            try:
+                response = requests.get(
+                    f"{BACKEND_URL}/vendors/{partner_key}",
+                    params={"article": article},
+                    timeout=WEB_APP_DATA_TIMEOUT
+                )
+                response.raise_for_status()
+                result = response.json()
+
+                if not result:
+                    await bot.send_message(
+                        message.chat.id,
+                        f"📦 <b>{partner}</b>:\n❌ Нет данных для артикула <code>{article}</code>.",
+                        parse_mode="HTML"
+                    )
+                    continue
+
+                # Красивый вывод для Netlab (и других, если структура похожа)
+                name = result.get("Наименование", "Не указано")
+                quantity = result.get("Количество", 0)
+                transit = result.get("Транзиты", "Нет данных")
+                remote = result.get("Удаленный склад", "Нет данных")
+                price = result.get("Цена", "Не указана")
+
+                # Форматируем цену и количество
+                price_str = f"{float(price):,.2f} $" if isinstance(price, (int, float)) else price
+                quantity_int = int(float(quantity)) if isinstance(quantity, (int, float)) else quantity
+
+                message_text = (
+                    f"📦 <b>{partner}</b>\n"
+                    f"▫️ <b>Наименование:</b> {name}\n"
+                    f"▫️ <b>Артикул:</b> <code>{article}</code>\n"
+                    f"▫️ <b>Количество:</b> {quantity_int} шт\n"
+                    f"▫️ <b>Транзит:</b> {transit} шт\n"
+                    f"▫️ <b>Удалённый склад:</b> {remote}\n"
+                    f"▫️ <b>Цена:</b> <b>{price_str}</b>"
+                )
+
+                await bot.send_message(
+                    chat_id=message.chat.id,
+                    text=message_text,
+                    parse_mode="HTML",
+                    reply_markup=get_main_keyboard()
+                )
+
+            except requests.Timeout:
+                await bot.send_message(
+                    message.chat.id,
+                    f"⏰ Таймаут при запросе к <b>{partner}</b>.",
+                    parse_mode="HTML"
+                )
+            except requests.HTTPError as e:
+                if response.status_code == 404:
+                    await bot.send_message(
+                        message.chat.id,
+                        f"❌ Поставщик <b>{partner}</b> не найден.",
+                        parse_mode="HTML"
+                    )
+                else:
+                    await bot.send_message(
+                        message.chat.id,
+                        f"❌ Ошибка {response.status_code} при запросе к <b>{partner}</b>.",
+                        parse_mode="HTML"
+                    )
+            except requests.RequestException as e:
+                logger.error(f"Ошибка сети при запросе к {partner}: {e}")
+                await bot.send_message(
+                    message.chat.id,
+                    f"❌ Ошибка при запросе к <b>{partner}</b>.",
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                logger.exception(f"Неизвестная ошибка при обработке ответа от {partner}: {e}")
+                await bot.send_message(
+                    message.chat.id,
+                    f"❌ Ошибка при обработке данных <b>{partner}</b>.",
+                    parse_mode="HTML"
+                )
 
     except json.JSONDecodeError as e:
         logger.error(f"Ошибка парсинга JSON из web_app_data: {e}")

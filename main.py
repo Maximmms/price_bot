@@ -2,7 +2,7 @@ import asyncio
 
 from telebot.async_telebot import AsyncTeleBot
 from config import settings
-from src.frontend.handlers.handlers_registry import register_handlers
+from frontend.tgbot.handlers.handlers_registry import register_handlers
 from src.utils import bot_logger as logger
 
 
@@ -14,6 +14,7 @@ class Bot:
     def run(self):
         logger.info('Запуск бота...')
         asyncio.run(self.bot.polling())
+
 
 if __name__ == '__main__':
     Bot().run()
