@@ -1,12 +1,31 @@
 [project]
 name = "pricebot"
 version = "0.1.0"
-description = "Add your description here"
+description = "Telegram bot for checking product prices across multiple vendors"
 requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.13.2",
     "fastapi>=0.122.0",
+    "pydantic>=2.12.5",
     "pytelegrambotapi>=4.29.1",
     "python-dotenv>=1.2.1",
+    "sqlalchemy>=2.0.54",
     "uvicorn>=0.38.0",
+    "openpyxl>=3.1.0",
+    "aiosqlite>=0.22.1",
+    "python-multipart>=0.0.32",
+    "requests>=2.31.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[project.scripts]
+pricebot-bot = "scripts.run_bot:main"
+pricebot-server = "scripts.run_server:main"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
